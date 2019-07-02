@@ -11,9 +11,9 @@ def getScore(s):
     return score
 
 url = 'https://watcha.com/ko-KR' #crawling 하려는 사이트 url
-keyWord = '아이언맨1' #항목 생성하려는 대상 이름
+keyWord = '아이언맨 3' #항목 생성하려는 대상 이름
 
-xpath_watcha = '//*[@id="root"]/div/div[1]/section/section/section[2]/div[2]/div[1]/div/div/div/ul/li[1]/a' #watcha 사이트의 세부 정보 링크 xpath
+xpath_watcha = '//*[@id="root"]/div/div[1]/section/section/section[2]/div[2]/div[1]/div/div/div/ul/li[@*]/a[@title="'+keyWord+'"]' #watcha 사이트의 세부 정보 링크 xpath, xpath 문법 중요
 
 chrome_option = webdriver.ChromeOptions() #headless 옵션 객체 생성
 chrome_option.add_argument('headless')

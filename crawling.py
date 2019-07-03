@@ -36,7 +36,8 @@ def get_actorlist(page):
         if i == 4:
             break
         try:
-            actor.append(actor_list[i].text) # 배우
+            tmp = actor_list[i].text
+            actor.append(tmp[0:len(tmp)-2]) # 배우
         except:
             break
     return actor

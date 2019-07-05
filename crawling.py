@@ -5,6 +5,21 @@ from bs4 import BeautifulSoup
 import json
 from collections import OrderedDict
 
+def remove_blank(s):
+    remove = ''
+    for c in s:
+        if c != ' ':
+            remove += c
+    return remove
+
+def remove_cmp(a, b):
+    a = remove_blank(a)
+    b = remove_blank(b)
+    if a == b:
+        return True
+    else :
+        return False
+
 def get_html(url, title, xpath_watcha):
     #whatcha의 메인 검색 페이지
     driver.get(url)
@@ -14,7 +29,13 @@ def get_html(url, title, xpath_watcha):
 
     #검색된 페이지에서 title에 해당하는 항목 선택
     a = driver.find_elements_by_xpath(xpath_watcha) #anchor xpath 객체 생성
-    content_url = a[0].get_attribute('href')
+    content_url = ''
+    for n in a:
+        text = n.get_attribute('title')
+        if remove_cmp(title, text):
+            content_url = n.get_attribute('href')
+            break
+
     driver.get(content_url) #해당 객체에서 href 경로로 이동
 
     #title 세부 정보 페이지
@@ -57,6 +78,13 @@ def get_summary(page):
             blank = False
     return summary
 
+def remove_blank(s):
+    remove = ''
+    for c in s:
+        if c != ' ':
+            remove += c
+    return remove
+
 chrome_option = webdriver.ChromeOptions() #headless 옵션 객체 생성
 chrome_option.add_argument('headless')
 chrome_option.add_argument('--disable-gpu')
@@ -64,7 +92,8 @@ chrome_option.add_argument('lang=ko_KR') #selenium 에서 gui 작동 안하게 h
 driver = webdriver.Chrome('/usr/local/bin/chromedriver', options=chrome_option) #chrome driver 사용 및 headless 옵션 객체 적용
 driver.implicitly_wait(3) #랜더링 완료 시간 대기
 
-list = ['아이언맨 3', '아이언맨 2', '아이언맨', '닥터 스트레인지', '7광구']
+# list = ['아이언맨 3', '아이언맨 2', '아이언맨', '닥터 스트레인지', '7광구']
+list = ['닥터스트레인지']
 for n in list:
     site_name = 'watcha'
     doc_id = 0
@@ -77,8 +106,9 @@ for n in list:
     review = ''
 
     url = 'https://watcha.com/ko-KR' #crawling 하려는 사이트 url
-    xpath_watcha = '//*[@id="root"]/div/div[1]/section/section/section[2]/div[2]/div[1]/div/div/div/ul/li[@*]/a[@title="'+title+'"]' #watcha 사이트의 세부 정보 링크 xpath, xpath 문법 중요
-
+    # xpath_watcha = '//*[@id="root"]/div/div[1]/section/section/section[2]/div[2]/div[1]/div/div/div/ul/li[@*]/a[@title="'+title+'"]' #watcha 사이트의 세부 정보 링크 xpath, xpath 문법 중요
+    xpath_watcha = '//*[@id="root"]/div/div[1]/section/section/section[2]/div[2]/div[1]/div/div/div/ul/li[@*]/a'
+    #TODO : 타이틀 텍스트 매칭, 네이버 무비, 다음, 로튼 토마토 // 진흥원 데이터 가져오기 (ip밴 조심) 영화진흥위원회
     page, content_url = get_html(url, title, xpath_watcha) #html 과 url링크 가져옴
     score = get_score(page) #별점
     actor = get_actorlist(page) # 배우

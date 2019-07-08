@@ -6,13 +6,7 @@ from collections import OrderedDict
 
 # Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36
 def search_title(title, url, search_xpath):
-    try:
-        driver.get(url) #default page에 접근
-    except:
-        print('* except in search_title() : driver.get(url) 에서 url이 잘못됨')
-        driver.get(url) #default page에 접근
-        driver.implicitly_wait(5) #maxmovie 깉은 경우에는 오래걸림 이게
-
+    driver.get(url) #default page에 접근
     elem = driver.find_elements_by_xpath(search_xpath) # 메인 search name
     elem = elem[0] #list object 상태에서는 바로 send Keys를 쓸 수 없다..
     elem.send_keys(Keys.SHIFT + Keys.END) # shift + end 키로 name value를 드레그함
@@ -30,6 +24,7 @@ def remove_blank(s): #입력 스트링의 공백 제거
     return remove
 
 def get_match(title, contry, open_year, start_year, data): #사이트 검색 결과 리스트의 영화 설명 데이터에서 검출된 스트링의 횟수를 반환
+    #TODO contry, year 에서 공백이 들어올 경우 처리하기
     cnt = 0
     if title in data: #타이틀명 있으면 추가
         cnt += 1
@@ -45,12 +40,15 @@ def get_url(title, contry, open_year, start_year, title_xpath, check_xpath):
     candidate_list = [] # 매칭 후보자 인덱스 리스트
     for i in range(len(c)):
         data = c[i].text # 설명 데이터 통째로 텍스트화
+        data += a[i].text
         cnt = get_match(title, contry, open_year, start_year, data)
         elem = (i,cnt)
         candidate_list.append(elem)
     candidate_list.sort(key = lambda t : t[1], reverse=True) #검출 횟수 내림차순으로 정렬
-
     index = candidate_list[0][0] #정렬된 맨 앞이 가장 검출 횟수가 높음으로 우리가 찾는 영화일 확률이 높음
+    max = candidate_list[0][1]
+    if max < 3:
+        raise match_error('match cnt is not full')
     content_url = a[index].get_attribute('href')
     driver.get(content_url) #경로로 이동
     return content_url #경로 반환
@@ -86,8 +84,7 @@ def score_scaling(score, scale):
 
 chrome_option = webdriver.ChromeOptions() #headless 옵션 객체 생성
 chrome_option.add_argument('headless')
-chrome_option.add_argument('--disable-gpu')
-chrome_option.add_argument('lang=ko_KR') #selenium 에서 gui 작동 안하게 headless 옵션 달아줌
+chrome_option.add_argument('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36')
 driver = webdriver.Chrome('/usr/local/bin/chromedriver', options=chrome_option) #chrome driver 사용 및 headless 옵션 객체 적용
 driver.implicitly_wait(3) #랜더링 완료 시간 대기
 
@@ -99,12 +96,12 @@ f.close()
 #Todo : headless 있고 없고에 따라서 max movie를 받고 못받고가 정해지는데 뭐때문일까?
 #Todo : 위에 cmp 체워 넣기, xpath 체워넣기, 테스트 코드 작성하기
 
-movie_list = ['엑시트']
+movie_list = ['어벤져스']
 for movie in movie_list: # 영화 리스트 순회
     title = movie
-    open_year = '2019'
-    start_year = '2018'
-    contry = '한국'
+    open_year = '2012'
+    start_year = '2012'
+    contry = '미국'
     json_file = OrderedDict()
     json_file['title'] = title
     link_list = []
@@ -113,23 +110,22 @@ for movie in movie_list: # 영화 리스트 순회
         scale_type = site['scale_type'] # 평점 스케일
         default_url = site['site_url'] # 사이트 기본 주소
         search_xpath = site['search_xpath'] # 사이트 검색 기능 속성명
-        title_xpath = site['title_xpath'] # 기본 주소에서 타이틀로 검색한 결과 리스트 접근 title_xpath        
+        title_xpath = site['title_xpath'] # 기본 주소에서 타이틀로 검색한 결과 리스트 접근 title_xpath
         check_xpath = site['check_xpath'] #  year 접근
         score_xpath = site['score_xpath'] # 별점 접근 속성
 
-        search_title(title, default_url, search_xpath)
-        content_url = get_url(title, contry ,open_year, start_year, title_xpath, check_xpath)
-        # try:
-        #     try: #기존 타이틀 명으로 검색
-        #         search_title(title, default_url, search_xpath)
-        #         content_url = get_url(title, contry ,open_year, start_year, title_xpath, check_xpath)
-        #     except: #연도를 붙여서 타이틀 검색
-        #         print('* except in get_url() : content_url 을 못 받아옴, title에 year 추가해서 재시도')
-        #         search_title(title + '('+year+')', default_url, search_xpath)
-        #         content_url = get_url(title + '('+year+')', contry ,open_year, start_year, title_xpath, check_xpath)
-        # except: #만약 연도를 붙여도 안나온다면
-        #     print('* except in get_url() : get_url() 재시도 실패, '+ site_name + ' crawling은 무시')
-        #     continue
+
+        try:
+            try: #기존 타이틀 명으로 검색
+                search_title(title, default_url, search_xpath)
+                content_url = get_url(title, contry ,open_year, start_year, title_xpath, check_xpath)
+            except: #연도를 붙여서 타이틀 검색
+                print('* except in get_url() : content_url 을 못 받아옴, title에 year 추가해서 재시도')
+                search_title(title + '('+ open_year +')', default_url, search_xpath)
+                content_url = get_url(title, contry ,open_year, start_year, title_xpath, check_xpath)
+        except: #만약 연도를 붙여도 안나온다면
+            print('* except in get_url() : get_url() 재시도 실패, '+ site_name + ' crawling은 무시')
+            continue
         score = get_score(score_xpath)
         score = score_scaling(score, scale_type)
 

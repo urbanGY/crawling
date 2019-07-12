@@ -27,7 +27,7 @@ def site(site_index):
 
 @pytest.fixture(scope = 'module')
 def movie():
-    m_l = [['어벤져스','미국','2012','2012'], ['엑시트','한국','2019','2018']]
+    m_l = ['어벤져스','미국','2012','2012']
     return m_l[1]
 
 @pytest.fixture(scope = 'module')
@@ -69,7 +69,7 @@ def test_remove_blank():
 
 def test_init():
     driver = link_crawling.init()
-    assert driver
+    assert driver #안됐을 때 케이스에 대한 고려
 
 def test_read_site_list(site_index):
     site_list = link_crawling.read_site_list()

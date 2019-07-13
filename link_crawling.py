@@ -30,8 +30,23 @@ def read_site_list():
     return site_list
 
 def read_movie_list():
+    f = open('data/movie/input/test.txt',mode='r',encoding='utf-8')
+    movie_list = []
+    while True:
+        line = f.readline()
+        if not line:
+            break
+        _, cid, title, contry, open_year, start_year = line.split('|')
+        if len(open_year) == 8:
+            open_year = open_year[:4]
+        if len(start_year) == 1:
+            start_year = ''
+        else :
+            start_year = start_year[:4]
+        tmp = [title, contry, open_year, start_year, cid]
+        movie_list.append(tmp)
     #['어벤져스','미국','2012','2012'],
-    movie_list = [['엑시트','한국','2019','2018']]
+    # movie_list = [['엑시트','한국','2019','2018']]
     return movie_list
 
 def search_title(driver, title, url, search_xpath):
@@ -54,7 +69,16 @@ def get_match(title, contry, open_year, start_year, data): #사이트 검색 결
         cnt += 1
     return cnt
 
+def get_max(contry, open_year, start_year):
+    max = 3
+    if contry == '':
+        max -= 1
+    if open_year == '' or start_year == '':
+        max -= 1
+    return max
+
 def get_url(driver, title, contry, open_year, start_year, title_xpath, check_xpath):
+    max = get_max(contry, open_year, start_year)
     a = driver.find_elements_by_xpath(title_xpath) #anchor title_xpath 객체 생성
     c = driver.find_elements_by_xpath(check_xpath) # check xpath
     candidate_list = [] # 매칭 후보자 인덱스 리스트
@@ -66,8 +90,8 @@ def get_url(driver, title, contry, open_year, start_year, title_xpath, check_xpa
         candidate_list.append(elem)
     candidate_list.sort(key = lambda t : t[1], reverse=True) #검출 횟수 내림차순으로 정렬
     index = candidate_list[0][0] #정렬된 맨 앞이 가장 검출 횟수가 높음으로 우리가 찾는 영화일 확률이 높음
-    max = candidate_list[0][1]
-    if max < 3:
+    match = candidate_list[0][1]
+    if match < max:
         raise match_error('match cnt is not full')
     content_url = a[index].get_attribute('href')
     driver.get(content_url) #경로로 이동
@@ -123,7 +147,11 @@ def body():
         contry = movie[1]
         open_year = movie[2]
         start_year = movie[3]
-
+        cid = movie[4]
+        print('title : ',title)
+        print('contry : ',contry)
+        print('open_year : ',open_year)
+        print('start_year : ',start_year)
         link_list = [] #crawling 된 링크들을 담을 list
         for site in site_list: # 이 카테고리에 해당하는 사이트들 순회
             site_name = site['site_name'] # 사이트명
@@ -161,7 +189,10 @@ def body():
 
         json_file = OrderedDict()
         json_file['title'] = title
+        json_file['data'] = [cid, contry, open_year, start_year]
         json_file['links'] = link_list
 
         with open('data/movie/output/'+title+'_link.json', 'w', encoding='utf-8') as make_file:
             json.dump(json_file, make_file, ensure_ascii=False, indent="\t")
+
+body()

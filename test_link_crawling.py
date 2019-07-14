@@ -99,8 +99,10 @@ def test_get_url(browser_list, site, movie):
     content_url = link_crawling.get_url(driver, title, contry, open_year, start_year, title_xpath, check_xpath)
     assert 1
 
-def test_get_score(browser_content, site, result_json):
-    driver = browser_content
+def test_get_score(browser, site, result_json):
+    url = 'https://watcha.com/ko-KR/contents/mOVgp1d'
+    driver = browser
+    driver.get(url)
     score_xpath = site['score_xpath']
     score = link_crawling.get_score(driver, score_xpath)
     scale = site['scale_type']

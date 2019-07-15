@@ -22,5 +22,5 @@ for i in range(1,7054):#7054 , 1 ~ 1000
         print('file'+str(index)+' complete!')
         time.sleep(5)
         index += 1
-        f = open('data/movie/input/movie_list_'+ str(index) +'.txt', mode='wt', encoding='utf-8')
+        f = open('data/movie_list_'+ str(index) +'.txt', mode='wt', encoding='utf-8')
 f.close()

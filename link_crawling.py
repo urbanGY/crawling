@@ -3,6 +3,7 @@ from selenium.webdriver.common.keys import Keys
 from bs4 import BeautifulSoup
 import json
 from collections import OrderedDict
+import datetime
 
 # Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36
 def remove_blank(s): #입력 스트링의 공백 제거
@@ -181,16 +182,24 @@ def body():
             json_tmp['site_name'] = site_name
             json_tmp['url'] = content_url
             json_tmp['rating'] = score
+            #TODO
+            #data // category, actor, summary
+            #review // if i can
             link_list.append(json_tmp)
 
             print('site name : ',site_name)
             print('url : ',content_url)
             print('raing : ',score)
 
+
         json_file = OrderedDict()
+        json_file['doc_id'] = cid
         json_file['title'] = title
-        json_file['data'] = [cid, contry, open_year, start_year]
-        json_file['links'] = link_list
+        now = datetime.datetime.now()
+        date = now.strftime('%Y%m%d%H%M%S')
+        json_file['date'] = date
+        json_file['check'] = [cid, contry, open_year, start_year]
+        json_file['site'] = link_list
 
         with open('data/movie/output/'+title+'_link.json', 'w', encoding='utf-8') as make_file:
             json.dump(json_file, make_file, ensure_ascii=False, indent="\t")

@@ -127,7 +127,12 @@ def score_scaling(score, scale):
         score = tmp
     return str(score)
 
-
+def get_data(driver, actor_xpath, summary_xpath):
+    json_data = OrderedDict()
+    json_data['category'] = 'movie'
+    json_data['actor'] = []
+    json_data['summary'] = 'summary'
+    return json_data
 
 #Todo : movie list 받아서 읽기 준비, movie list 3001 ~ 끝까지 크롤링하자
 #Todo : headless 있고 없고에 따라서 max movie를 받고 못받고가 정해지는데 뭐때문일까?
@@ -182,6 +187,8 @@ def body():
             json_tmp['site_name'] = site_name
             json_tmp['url'] = content_url
             json_tmp['rating'] = score
+            json_tmp['data'] = get_data(driver, actor_xpath, summary_xpath)
+            json_tmp['review'] = 'review'
             #TODO
             #data // category, actor, summary
             #review // if i can
@@ -201,7 +208,7 @@ def body():
         json_file['check'] = [cid, contry, open_year, start_year]
         json_file['site'] = link_list
 
-        with open('data/movie/output/'+title+'_link.json', 'w', encoding='utf-8') as make_file:
+        with open('data/movie/test/'+title+'_link.json', 'w', encoding='utf-8') as make_file:
             json.dump(json_file, make_file, ensure_ascii=False, indent="\t")
 
 body()

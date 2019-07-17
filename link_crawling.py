@@ -1,9 +1,9 @@
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
-from bs4 import BeautifulSoup
 import json
 from collections import OrderedDict
 import datetime
+import time
 
 # Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36
 def remove_blank(s): #입력 스트링의 공백 제거
@@ -24,14 +24,16 @@ def init():
     return driver
 
 def read_site_list():
-    f = open('data/movie/site_list.json',mode='r',encoding='utf-8')
+    # f = open('data/movie/site_list.json',mode='r',encoding='utf-8')
+    f = open('site_list.json',mode='r',encoding='utf-8')
     json_site = json.load(f)
     site_list = json_site['site_list']
     f.close()
     return site_list
 
 def read_movie_list():
-    f = open('data/movie/input/test.txt',mode='r',encoding='utf-8')
+    # f = open('data/movie/input/test.txt',mode='r',encoding='utf-8')
+    f = open('data/movie_list_1.txt',mode='r',encoding='utf-8')
     movie_list = []
     while True:
         line = f.readline()
@@ -46,8 +48,13 @@ def read_movie_list():
             start_year = start_year[:4]
         tmp = [title, contry, open_year, start_year, cid]
         movie_list.append(tmp)
+    return movie_list
+
+def read_movie_list_test():
     #['어벤져스','미국','2012','2012'],
     # movie_list = [['엑시트','한국','2019','2018']]
+    # movie_list = [['페르세폴리스','프랑스','2008','2007','20080517']]
+    movie_list = [['주사기','한국','','2018','20190667']]
     return movie_list
 
 def search_title(driver, title, url, search_xpath):
@@ -60,14 +67,18 @@ def search_title(driver, title, url, search_xpath):
     elem.send_keys(Keys.RETURN) #엔터 입력
 
 def get_match(title, contry, open_year, start_year, data): #사이트 검색 결과 리스트의 영화 설명 데이터에서 검출된 스트링의 횟수를 반환
+    if len(data) > 85:
+        return 0
     #TODO contry, year 에서 공백이 들어올 경우 처리하기
     cnt = 0
     if title in data: #타이틀명 있으면 추가
         cnt += 1
-    if contry in data: # 같은 나라에서 제작했으면 추가
-        cnt += 1
     if open_year in data or start_year in data: #개봉 또는 제작년도에 일치하는 년도 있으면 추가
         cnt += 1
+    if contry in data: # 같은 나라에서 제작했으면 추가
+        cnt += 1
+    else:
+        cnt = 0
     return cnt
 
 def get_max(contry, open_year, start_year):
@@ -93,7 +104,8 @@ def get_url(driver, title, contry, open_year, start_year, title_xpath, check_xpa
     index = candidate_list[0][0] #정렬된 맨 앞이 가장 검출 횟수가 높음으로 우리가 찾는 영화일 확률이 높음
     match = candidate_list[0][1]
     if match < max:
-        raise match_error('match cnt is not full')
+        if not(len(candidate_list) == 1 and match == max-1):
+            raise match_error('match cnt is not full')
     content_url = a[index].get_attribute('href')
     driver.get(content_url) #경로로 이동
     return content_url #경로 반환
@@ -128,10 +140,18 @@ def score_scaling(score, scale):
     return str(score)
 
 def get_data(driver, actor_xpath, summary_xpath):
+    a = driver.find_elements_by_xpath(actor_xpath) #anchor title_xpath 객체 생성
+    s = driver.find_elements_by_xpath(summary_xpath) # check xpath
+    tmp = []
+    for actor in a:
+        tmp.append(actor.text)
     json_data = OrderedDict()
     json_data['category'] = 'movie'
-    json_data['actor'] = []
-    json_data['summary'] = 'summary'
+    json_data['actor'] = tmp
+    try:
+        json_data['summary'] = s[0].text
+    except:
+        json_data['summary'] = 'not exist'
     return json_data
 
 #Todo : movie list 받아서 읽기 준비, movie list 3001 ~ 끝까지 크롤링하자
@@ -154,10 +174,10 @@ def body():
         open_year = movie[2]
         start_year = movie[3]
         cid = movie[4]
-        print('title : ',title)
-        print('contry : ',contry)
-        print('open_year : ',open_year)
-        print('start_year : ',start_year)
+        # print('title : ',title)
+        # print('contry : ',contry)
+        # print('open_year : ',open_year)
+        # print('start_year : ',start_year)
         link_list = [] #crawling 된 링크들을 담을 list
         for site in site_list: # 이 카테고리에 해당하는 사이트들 순회
             site_name = site['site_name'] # 사이트명
@@ -167,8 +187,8 @@ def body():
             title_xpath = site['title_xpath'] # 기본 주소에서 타이틀로 검색한 결과 리스트 접근 title_xpath
             check_xpath = site['check_xpath'] #  year 접근
             score_xpath = site['score_xpath'] # 별점 접근 속성
-
-
+            actor_xpath = site['actor_xpath'] # 배우 목록 접근
+            summary_xpath = site['summary_xpath'] # 영화 내용
             try:
                 try: #기존 타이틀 명으로 검색
                     search_title(driver, title, default_url, search_xpath)
@@ -194,9 +214,11 @@ def body():
             #review // if i can
             link_list.append(json_tmp)
 
-            print('site name : ',site_name)
-            print('url : ',content_url)
-            print('raing : ',score)
+            # print('site name : ',site_name)
+            # print('url : ',content_url)
+            # print('raing : ',score)
+            # print('\n')
+            print(site_name+' finish !')
 
 
         json_file = OrderedDict()
@@ -208,7 +230,10 @@ def body():
         json_file['check'] = [cid, contry, open_year, start_year]
         json_file['site'] = link_list
 
-        with open('data/movie/test/'+title+'_link.json', 'w', encoding='utf-8') as make_file:
+        # with open('data/movie/test/'+title+'_link.json', 'w', encoding='utf-8') as make_file:
+        with open('output/'+title+'_link.json', 'w', encoding='utf-8') as make_file:
             json.dump(json_file, make_file, ensure_ascii=False, indent="\t")
+            print('make '+title+'_link.json file!')
+        time.sleep(1)
 
 body()

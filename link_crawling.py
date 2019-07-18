@@ -18,7 +18,7 @@ def remove_blank(s): #입력 스트링의 공백 제거
 def init():
     chrome_option = webdriver.ChromeOptions() #headless 옵션 객체 생성
     chrome_option.add_argument('headless')
-    chrome_option.add_argument('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36')
+    chrome_option.add_argument('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36')
     driver = webdriver.Chrome('/usr/local/bin/chromedriver', options=chrome_option) #chrome driver 사용 및 headless 옵션 객체 적용
     driver.implicitly_wait(3) #랜더링 완료 시간 대기
     return driver
@@ -53,11 +53,13 @@ def read_movie_list():
 def read_movie_list_test():
     #['어벤져스','미국','2012','2012'],
     # movie_list = [['엑시트','한국','2019','2018']]
-    # movie_list = [['페르세폴리스','프랑스','2008','2007','20080517']]
-    movie_list = [['주사기','한국','','2018','20190667']]
+    movie_list = [['페르세폴리스','프랑스','2008','2007','20080517']]
+    # movie_list = [['주사기','한국','','2018','20190667']]
     return movie_list
 
 def search_title(driver, title, url, search_xpath):
+    user_agent = driver.execute_script("return navigator.userAgent;")
+    print(user_agent)
     driver.get(url) #default page에 접근
     elem = driver.find_elements_by_xpath(search_xpath) # 메인 search name
     elem = elem[0] #list object 상태에서는 바로 send Keys를 쓸 수 없다..
@@ -67,6 +69,8 @@ def search_title(driver, title, url, search_xpath):
     elem.send_keys(Keys.RETURN) #엔터 입력
 
 def get_match(title, contry, open_year, start_year, data): #사이트 검색 결과 리스트의 영화 설명 데이터에서 검출된 스트링의 횟수를 반환
+    print('data : ',data)
+    print('data len : ',len(data))
     if len(data) > 85:
         return 0
     #TODO contry, year 에서 공백이 들어올 경우 처리하기
@@ -161,7 +165,7 @@ def body():
 
     driver = init()
     site_list = read_site_list()
-    movie_list = read_movie_list()
+    movie_list = read_movie_list_test()
 
     for movie in movie_list: # 영화 리스트 순회
         # title = movie['title']
@@ -235,5 +239,6 @@ def body():
             json.dump(json_file, make_file, ensure_ascii=False, indent="\t")
             print('make '+title+'_link.json file!')
         time.sleep(1)
+    driver.Quit()    
 
 body()

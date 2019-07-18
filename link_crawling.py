@@ -33,7 +33,7 @@ def read_site_list():
 
 def read_movie_list():
     # f = open('data/movie/input/test.txt',mode='r',encoding='utf-8')
-    f = open('data/movie_list_1.txt',mode='r',encoding='utf-8')
+    f = open('movielist/movie_list_1.txt',mode='r',encoding='utf-8')
     movie_list = []
     while True:
         line = f.readline()

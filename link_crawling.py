@@ -1,9 +1,12 @@
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.firefox.options import Options
 import json
 from collections import OrderedDict
 import datetime
 import time
+import requests
+import psycopg2
 
 # Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36
 def remove_blank(s): #입력 스트링의 공백 제거
@@ -17,10 +20,21 @@ def remove_blank(s): #입력 스트링의 공백 제거
 
 def init():
     chrome_option = webdriver.ChromeOptions() #headless 옵션 객체 생성
-    chrome_option.add_argument('headless')
-    chrome_option.add_argument('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36')
+    chrome_option.add_argument('--headless')
+    chrome_option.add_argument('--no-sandbox')
+    chrome_option.add_argument('--disable-dev-shm-usage')
+    chrome_option.add_argument('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36')
     driver = webdriver.Chrome('/usr/local/bin/chromedriver', options=chrome_option) #chrome driver 사용 및 headless 옵션 객체 적용
     driver.implicitly_wait(3) #랜더링 완료 시간 대기
+    return driver
+
+def init_firefox():
+    firefox_option = Options()
+    firefox_option.add_argument("--headless")	
+    driver = webdriver.Firefox(executable_path='/usr/local/bin/geckodriver',firefox_options=firefox_option)
+    print('driver ready')
+    driver.implicity_wait(3)
+    print('return driver')
     return driver
 
 def read_site_list():
@@ -52,25 +66,28 @@ def read_movie_list():
 
 def read_movie_list_test():
     #['어벤져스','미국','2012','2012'],
-    # movie_list = [['엑시트','한국','2019','2018']]
-    movie_list = [['페르세폴리스','프랑스','2008','2007','20080517']]
+    movie_list = [['엑시트','한국','2019','2018','123']]
+    #movie_list = [['페르세폴리스','프랑스','2008','2007','20080517']]
     # movie_list = [['주사기','한국','','2018','20190667']]
     return movie_list
 
 def search_title(driver, title, url, search_xpath):
+    ##print('url : ',url)
     user_agent = driver.execute_script("return navigator.userAgent;")
-    print(user_agent)
+    ##print(user_agent)
     driver.get(url) #default page에 접근
-    elem = driver.find_elements_by_xpath(search_xpath) # 메인 search name
-    elem = elem[0] #list object 상태에서는 바로 send Keys를 쓸 수 없다..
+    ##print(driver)
+    html = requests.get(url).text
+    ##print(html)
+    elem = driver.find_element_by_xpath(search_xpath) # 메인 search name
+    #elem = elem[0] #list object 상태에서는 바로 send Keys를 쓸 수 없다..
     elem.send_keys(Keys.SHIFT + Keys.END) # shift + end 키로 name value를 드레그함
     elem.send_keys(Keys.DELETE) #드레그한 value를 제거해 내가 검색하려는 타이틀만을 깔끔하게 검색하게 만듬
     elem.send_keys(title) #search block에 키워드 입력
     elem.send_keys(Keys.RETURN) #엔터 입력
 
 def get_match(title, contry, open_year, start_year, data): #사이트 검색 결과 리스트의 영화 설명 데이터에서 검출된 스트링의 횟수를 반환
-    print('data : ',data)
-    print('data len : ',len(data))
+    #print('data : ',data)
     if len(data) > 85:
         return 0
     #TODO contry, year 에서 공백이 들어올 경우 처리하기
@@ -193,6 +210,8 @@ def body():
             score_xpath = site['score_xpath'] # 별점 접근 속성
             actor_xpath = site['actor_xpath'] # 배우 목록 접근
             summary_xpath = site['summary_xpath'] # 영화 내용
+            #search_title(driver, title, default_url, search_xpath)
+            #content_url = get_url(driver, title, contry ,open_year, start_year, title_xpath, check_xpath)
             try:
                 try: #기존 타이틀 명으로 검색
                     search_title(driver, title, default_url, search_xpath)
@@ -224,7 +243,6 @@ def body():
             # print('\n')
             print(site_name+' finish !')
 
-
         json_file = OrderedDict()
         json_file['doc_id'] = cid
         json_file['title'] = title
@@ -233,12 +251,19 @@ def body():
         json_file['date'] = date
         json_file['check'] = [cid, contry, open_year, start_year]
         json_file['site'] = link_list
+        json_file = json.dumps(json_file,ensure_ascii=False)
 
         # with open('data/movie/test/'+title+'_link.json', 'w', encoding='utf-8') as make_file:
-        with open('output/'+title+'_link.json', 'w', encoding='utf-8') as make_file:
-            json.dump(json_file, make_file, ensure_ascii=False, indent="\t")
-            print('make '+title+'_link.json file!')
+        #with open('output/'+title+'_link.json', 'w', encoding='utf-8') as make_file:
+        #    json.dump(json_file, make_file, ensure_ascii=False, indent="\t")
+        #    print('make '+title+'_link.json file!')
+        conn_string = "host='localhost' dbname ='crawling' user='superson' password='superson'"
+        conn = psycopg2.connect(conn_string)
+        cur = conn.cursor()
+        cur.execute("INSERT INTO rawdata (key, data)  VALUES (%s, %s)", (cid,json_file))
+        conn.commit()
+        cur.close()
+        conn.close()
         time.sleep(1)
-    driver.Quit()    
-
+    driver.quit()
 body()

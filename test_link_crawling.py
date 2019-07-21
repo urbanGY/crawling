@@ -4,7 +4,10 @@ import link_crawling
 import json
 
 #pytest --site 0,1,2,3 test_link_crawling.py
-
+# https://watcha.com/ko-KR
+# https://watcha.com/ko-KR/search?query=%EC%97%91%EC%8B%9C%ED%8A%B8
+# https://watcha.com/ko-KR/contents/mdErj22
+# 왓챠 엑시트
 @pytest.fixture(scope = 'module')
 def site_index(pytestconfig):
     val = pytestconfig.getoption("site")

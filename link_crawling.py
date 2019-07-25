@@ -6,7 +6,7 @@ from collections import OrderedDict
 import datetime
 import time
 import requests
-import psycopg2
+#import psycopg2
 
 # Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36
 def remove_blank(s): #입력 스트링의 공백 제거
@@ -30,7 +30,7 @@ def init():
 
 def init_firefox():
     firefox_option = Options()
-    firefox_option.add_argument("--headless")	
+    firefox_option.add_argument("--headless")
     driver = webdriver.Firefox(executable_path='/usr/local/bin/geckodriver',firefox_options=firefox_option)
     print('driver ready')
     driver.implicity_wait(3)
@@ -178,12 +178,8 @@ def get_data(driver, actor_xpath, summary_xpath):
 #Todo : movie list 받아서 읽기 준비, movie list 3001 ~ 끝까지 크롤링하자
 #Todo : headless 있고 없고에 따라서 max movie를 받고 못받고가 정해지는데 뭐때문일까?
 #Todo : 위에 cmp 체워 넣기, xpath 체워넣기, 테스트 코드 작성하기
-def body():
-
-    driver = init()
-    site_list = read_site_list()
-    movie_list = read_movie_list_test()
-
+def body(site_list, movie_list):
+    driver = init()    
     for movie in movie_list: # 영화 리스트 순회
         # title = movie['title']
         # contry = movie['contry']
@@ -257,13 +253,14 @@ def body():
         #with open('output/'+title+'_link.json', 'w', encoding='utf-8') as make_file:
         #    json.dump(json_file, make_file, ensure_ascii=False, indent="\t")
         #    print('make '+title+'_link.json file!')
-        conn_string = "host='localhost' dbname ='crawling' user='superson' password='superson'"
-        conn = psycopg2.connect(conn_string)
-        cur = conn.cursor()
-        cur.execute("INSERT INTO rawdata (key, data)  VALUES (%s, %s)", (cid,json_file))
-        conn.commit()
-        cur.close()
-        conn.close()
-        time.sleep(1)
+
+        # conn_string = "host='localhost' dbname ='crawling' user='superson' password='superson'"
+        # conn = psycopg2.connect(conn_string)
+        # cur = conn.cursor()
+        # cur.execute("INSERT INTO rawdata (key, data)  VALUES (%s, %s)", (cid,json_file))
+        # conn.commit()
+        # cur.close()
+        # conn.close()
+        # time.sleep(1)
     driver.quit()
-body()
+#body()

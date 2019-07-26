@@ -179,7 +179,7 @@ def get_data(driver, actor_xpath, summary_xpath):
 #Todo : headless 있고 없고에 따라서 max movie를 받고 못받고가 정해지는데 뭐때문일까?
 #Todo : 위에 cmp 체워 넣기, xpath 체워넣기, 테스트 코드 작성하기
 def body(site_list, movie_list):
-    driver = init()    
+    driver = init()
     for movie in movie_list: # 영화 리스트 순회
         # title = movie['title']
         # contry = movie['contry']
@@ -243,12 +243,10 @@ def body(site_list, movie_list):
         json_file['doc_id'] = cid
         json_file['title'] = title
         now = datetime.datetime.now()
-        date = now.strftime('%Y%m%d%H%M%S')
-        json_file['date'] = date
         json_file['check'] = [cid, contry, open_year, start_year]
         json_file['site'] = link_list
         json_file = json.dumps(json_file,ensure_ascii=False)
-
+        date = now.strftime('%Y%m%d%H%M%S')
         # with open('data/movie/test/'+title+'_link.json', 'w', encoding='utf-8') as make_file:
         #with open('output/'+title+'_link.json', 'w', encoding='utf-8') as make_file:
         #    json.dump(json_file, make_file, ensure_ascii=False, indent="\t")
@@ -257,7 +255,7 @@ def body(site_list, movie_list):
         # conn_string = "host='localhost' dbname ='crawling' user='superson' password='superson'"
         # conn = psycopg2.connect(conn_string)
         # cur = conn.cursor()
-        # cur.execute("INSERT INTO rawdata (key, data)  VALUES (%s, %s)", (cid,json_file))
+        # cur.execute("INSERT INTO rawdata (key, date, data)  VALUES (%s, %s, %s)", (cid,date,json_file))
         # conn.commit()
         # cur.close()
         # conn.close()

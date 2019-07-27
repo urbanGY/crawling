@@ -5,7 +5,7 @@ import json
 from collections import OrderedDict
 import datetime
 import time
-import requests
+#import requests
 #import psycopg2
 
 # Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36
@@ -247,10 +247,7 @@ def body(site_list, movie_list):
         json_file['site'] = link_list
         json_file = json.dumps(json_file,ensure_ascii=False)
         date = now.strftime('%Y%m%d%H%M%S')
-        # with open('data/movie/test/'+title+'_link.json', 'w', encoding='utf-8') as make_file:
-        #with open('output/'+title+'_link.json', 'w', encoding='utf-8') as make_file:
-        #    json.dump(json_file, make_file, ensure_ascii=False, indent="\t")
-        #    print('make '+title+'_link.json file!')
+
 
         # conn_string = "host='localhost' dbname ='crawling' user='superson' password='superson'"
         # conn = psycopg2.connect(conn_string)
@@ -261,4 +258,10 @@ def body(site_list, movie_list):
         # conn.close()
         # time.sleep(1)
     driver.quit()
+    return date
 #body()
+
+# with open('data/movie/test/'+title+'_link.json', 'w', encoding='utf-8') as make_file:
+#with open('output/'+title+'_link.json', 'w', encoding='utf-8') as make_file:
+#    json.dump(json_file, make_file, ensure_ascii=False, indent="\t")
+#    print('make '+title+'_link.json file!')
